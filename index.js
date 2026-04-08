@@ -13,6 +13,9 @@ const client = new Client({
 const SOURCE_CHANNEL_ID = process.env.SOURCE_CHANNEL_ID;
 const TARGET_CHANNEL_ID = process.env.TARGET_CHANNEL_ID;
 
+// Deduplication — track recently relayed message IDs
+const recentlyRelayed = new Set();
+
 // Keywords that trigger the relay filter
 const FILTER_KEYWORDS = ['iran', 'strait', 'oil', 'crude', 'war'];
 
@@ -56,11 +59,11 @@ function scoreMessage(text) {
   return { totalScore, matchedWords };
 }
 
-function getImpactLabel(score) {
-  if (score >= 5) return { emoji: '🔴🔴', label: 'CRITICAL' };
-  if (score >= 3) return { emoji: '🔴',   label: 'HIGH' };
-  if (score >= 2) return { emoji: '🟡',   label: 'MODERATE' };
-  return              { emoji: '🟢',   label: 'LOW' };
+function getImpactEmoji(score) {
+  if (score >= 5) return '🔴';
+  if (score >= 3) return '🔴';
+  if (score >= 2) return '🟡';
+  return '🟢';
 }
 
 async function getOrCreateWebhook(channel) {
@@ -106,6 +109,11 @@ client.on('messageCreate', async (message) => {
   if (message.author.id === client.user.id) return;
   if (message.channel.id !== SOURCE_CHANNEL_ID) return;
 
+  // Deduplicate — skip if we've already relayed this message
+  if (recentlyRelayed.has(message.id)) return;
+  recentlyRelayed.add(message.id);
+  setTimeout(() => recentlyRelayed.delete(message.id), 60000);
+
   const searchableText = extractSearchableText(message);
   const lower = searchableText.toLowerCase();
 
@@ -118,9 +126,9 @@ client.on('messageCreate', async (message) => {
 
   // Score the message
   const { totalScore, matchedWords } = scoreMessage(searchableText);
-  const { emoji, label } = getImpactLabel(totalScore);
+  const emoji = getImpactEmoji(totalScore);
 
-  console.log(`[RELAY] Score=${totalScore} (${label}) keywords=[${matchedWords.join(', ')}] from ${message.author.username}`);
+  console.log(`[RELAY] Score=${totalScore} keywords=[${matchedWords.join(', ')}] from ${message.author.username}`);
 
   try {
     const targetChannel = await client.channels.fetch(TARGET_CHANNEL_ID);
@@ -131,8 +139,10 @@ client.on('messageCreate', async (message) => {
 
     const webhook = await getOrCreateWebhook(targetChannel);
 
-    const header = `${emoji} **${label}**  |  ${matchedWords.join(' · ')}\n${'━'.repeat(32)}`;
-    const finalContent = `${header}\n${searchableText}`;
+    // Prepend emoji to the first line only
+    const lines = searchableText.split('\n');
+    lines[0] = `${emoji} ${lines[0]}`;
+    const finalContent = lines.join('\n');
 
     await webhook.send({
       content: finalContent,
