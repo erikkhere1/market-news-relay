@@ -95,7 +95,14 @@ function extractSearchableText(message) {
       }
     }
   }
-  return parts.join('\n');
+  // Strip "NEWS BY ..." attribution lines
+  const raw = parts.join('\n');
+  const cleaned = raw
+    .split('\n')
+    .filter(line => !/^news by\s/i.test(line.trim()))
+    .join('\n')
+    .trim();
+  return cleaned;
 }
 
 client.on('clientReady', () => {
