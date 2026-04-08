@@ -1,0 +1,16 @@
+{
+  "name": "news-relay-bot",
+  "version": "1.0.0",
+  "description": "Discord relay bot — monitors a news channel for oil/geopolitical keywords and relays matches",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.4.5"
+  }
+}
