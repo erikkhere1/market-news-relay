@@ -124,11 +124,11 @@ function extractSearchableText(message) {
       }
     }
   }
-  // Strip "NEWS BY ..." attribution lines
+  // Strip "NEWS BY ..." attribution lines (even if preceded by an emoji)
   const raw = parts.join('\n');
   const cleaned = raw
     .split('\n')
-    .filter(line => !/^news by\s/i.test(line.trim()))
+    .filter(line => !/news by\s/i.test(line))
     .join('\n')
     .trim();
   return cleaned;
