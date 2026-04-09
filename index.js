@@ -54,7 +54,10 @@ const DEESCALATION_PHRASES = [
   "stay open", "remain open", "secure", "ceasefire",
   "peace", "agreement", "deal", "signed", "resolved",
   "comply", "compliance", "de-escalat", "pull back",
-  "withdraw", "no war", "avoid war"
+  "withdraw", "no war", "avoid war",
+  // Non-oil shipping context (dry cargo ≠ oil market impact)
+  "dry cargo", "bulk carrier", "grain", "wheat", "coal cargo",
+  "container ship", "cargo ship"
 ];
 
 function scoreMessage(text) {
