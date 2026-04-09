@@ -44,6 +44,16 @@ const SCORING_KEYWORDS = [
   { word: 'oil',       score: 1 },
 ];
 
+// De-escalation phrases — these reduce the score when present
+// e.g. "no nuclear weapons", "strait will stay open", "ceasefire agreed"
+const DEESCALATION_PHRASES = [
+  "won't be", "will not", "no nuclear", "not nuclear",
+  "stay open", "remain open", "secure", "ceasefire",
+  "peace", "agreement", "deal", "signed", "resolved",
+  "comply", "compliance", "de-escalat", "pull back",
+  "withdraw", "no war", "avoid war"
+];
+
 function scoreMessage(text) {
   const lower = text.toLowerCase();
   let totalScore = 0;
@@ -54,6 +64,19 @@ function scoreMessage(text) {
       totalScore += score;
       matchedWords.push(word);
     }
+  }
+
+  // Apply de-escalation modifier — each phrase found reduces score by 2
+  let deescalationHits = 0;
+  for (const phrase of DEESCALATION_PHRASES) {
+    if (lower.includes(phrase)) {
+      deescalationHits++;
+    }
+  }
+  if (deescalationHits > 0) {
+    const reduction = deescalationHits * 2;
+    console.log(`[SCORE] De-escalation phrases found (${deescalationHits}), reducing score by ${reduction}`);
+    totalScore = Math.max(1, totalScore - reduction);
   }
 
   return { totalScore, matchedWords };
