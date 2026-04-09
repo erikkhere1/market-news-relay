@@ -16,7 +16,10 @@ const TARGET_CHANNEL_ID = process.env.TARGET_CHANNEL_ID;
 // Deduplication — track recently relayed message IDs
 const recentlyRelayed = new Set();
 
-// Keywords that trigger the relay filter
+// Minimum score required to relay — filters out low-context standalone oil/crude mentions
+const MIN_RELAY_SCORE = 2;
+
+// Keywords that trigger initial scan (broad net)
 const FILTER_KEYWORDS = ['iran', 'strait', 'oil', 'crude', 'war'];
 
 // Scoring keywords — weighted by expected market impact
@@ -36,7 +39,7 @@ const SCORING_KEYWORDS = [
   { word: 'embargo',   score: 2 },
   { word: 'nuclear',   score: 2 },
   // Geopolitical context
-  { word: 'iran',      score: 1 },
+  { word: 'iran',      score: 2 }, // any Iran headline is relevant
   { word: 'conflict',  score: 1 },
   { word: 'tension',   score: 1 },
   // Commodity/supply
@@ -157,6 +160,12 @@ client.on('messageCreate', async (message) => {
   // Score the message
   const { totalScore, matchedWords } = scoreMessage(searchableText);
   const emoji = getImpactEmoji(totalScore);
+
+  // Skip if below minimum quality threshold
+  if (totalScore < MIN_RELAY_SCORE) {
+    console.log(`[SKIP] Score too low (${totalScore} < ${MIN_RELAY_SCORE}): "${searchableText.slice(0, 100)}"`);
+    return;
+  }
 
   console.log(`[RELAY] Score=${totalScore} keywords=[${matchedWords.join(', ')}] from ${message.author.username}`);
 
