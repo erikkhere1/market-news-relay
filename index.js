@@ -89,10 +89,10 @@ function scoreMessage(text) {
 }
 
 function getImpactEmoji(score) {
-  if (score >= 5) return '🔴';
-  if (score >= 3) return '🔴';
-  if (score >= 2) return '🟡';
-  return '🟢';
+  if (score >= 5) return '❗❗❗';
+  if (score >= 3) return '❗❗❗';
+  if (score >= 2) return '❗❗';
+  return '❗';
 }
 
 async function getOrCreateWebhook(channel) {
