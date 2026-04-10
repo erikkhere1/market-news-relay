@@ -107,6 +107,25 @@ async function getOrCreateWebhook(channel) {
   return webhook;
 }
 
+// Returns only the headline/content used for keyword filtering (no metadata)
+function extractFilterText(message) {
+  const parts = [];
+  if (message.content) parts.push(message.content);
+  if (message.embeds?.length) {
+    for (const embed of message.embeds) {
+      if (embed.title)       parts.push(embed.title);
+      if (embed.description) parts.push(embed.description);
+    }
+  }
+  const raw = parts.join('\n');
+  return raw
+    .split('\n')
+    .filter(line => !/news by\s/i.test(line))
+    .join('\n')
+    .trim();
+}
+
+// Returns all text including metadata (used to build the relayed message display)
 function extractSearchableText(message) {
   const parts = [];
   if (message.content) parts.push(message.content);
@@ -150,18 +169,21 @@ client.on('messageCreate', async (message) => {
   recentlyRelayed.add(message.id);
   setTimeout(() => recentlyRelayed.delete(message.id), 60000);
 
+  // filterText = headline/content only (no embed metadata/footer/tags)
+  const filterText = extractFilterText(message);
+  // searchableText = full text used for the relayed message display
   const searchableText = extractSearchableText(message);
-  const lower = searchableText.toLowerCase();
+  const lower = filterText.toLowerCase();
 
-  // Check filter keywords first
+  // Check filter keywords against headline/content only
   const matched = FILTER_KEYWORDS.find(kw => lower.includes(kw));
   if (!matched) {
-    console.log(`[SKIP] No filter keyword found: "${searchableText.slice(0, 100)}"`);
+    console.log(`[SKIP] No filter keyword found: "${filterText.slice(0, 100)}"`);
     return;
   }
 
-  // Score the message
-  const { totalScore, matchedWords } = scoreMessage(searchableText);
+  // Score the message against headline/content only
+  const { totalScore, matchedWords } = scoreMessage(filterText);
   const emoji = getImpactEmoji(totalScore);
 
   // Skip if below minimum quality threshold
