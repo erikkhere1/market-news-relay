@@ -17,7 +17,7 @@ const TARGET_CHANNEL_ID = process.env.TARGET_CHANNEL_ID;
 const recentlyRelayed = new Set();
 
 // Minimum score required to relay — filters out low-context standalone oil/crude mentions
-const MIN_RELAY_SCORE = 2;
+const MIN_RELAY_SCORE = 3;
 
 // Keywords that trigger initial scan (broad net)
 const FILTER_KEYWORDS = ['iran', 'strait', 'oil', 'crude', 'war'];
@@ -55,6 +55,13 @@ const DEESCALATION_PHRASES = [
   "peace", "agreement", "deal", "signed", "resolved",
   "comply", "compliance", "de-escalat", "pull back",
   "withdraw", "no war", "avoid war",
+  // Diplomatic / negotiation context (not a supply shock)
+  "diplomatic", "diplomacy", "talks", "negotiat", "summit",
+  "discussion", "meeting", "ahead of", "in response to",
+  "calls for", "urges", "says", "warns",
+  // Market-context phrases (price moves, not supply disruption)
+  "oil stable", "prices stable", "equities rise", "markets rise",
+  "stocks rise", "rally", "steady", "unchanged",
   // Non-oil shipping context (dry cargo ≠ oil market impact)
   "dry cargo", "bulk carrier", "grain", "wheat", "coal cargo",
   "container ship", "cargo ship"
